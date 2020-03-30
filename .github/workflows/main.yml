@@ -2,11 +2,18 @@ name: update list
 
 on:
   schedule:
-  - cron: "0 3 */2 * *"
+  - cron: "0 3 * * 6"
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: Run a one-line script
-      run: curl -s -A "Mozilla/5.0 (X11; Linux x86_64; rv:74.0) Gecko/20100101 Firefox/74.0" https://www.iblocklist.com/lists.php | sed -n "s/.*value='\(http.*\)'.*/\1/p" | sed "s/\&amp;/\&/g" | sed "s/http/\"http/g" | sed "s/gz/gz\"/g" | xargs wget -O - |  gunzip | egrep -v '^#' | gzip > blocklist.gz
+    - name: Fetch List
+      run: ./blocklist-build.sh 
+    - name: Release
+      uses: marvinpinto/action-automatic-releases@v1.0.0
+      with:
+        repo_token: "${{ secrets.RELEASE_TOKEN }}"
+        automatic_release_tag: latest
+        prerelease: false
+        files: blocklist.gz
